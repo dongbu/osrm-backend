@@ -46,7 +46,6 @@ EdgeBasedGraphFactory::EdgeBasedGraphFactory(
     CompressedEdgeContainer &compressed_edge_container,
     const std::unordered_set<NodeID> &barrier_nodes,
     const std::unordered_set<NodeID> &traffic_lights,
-    std::shared_ptr<const RestrictionMap> restriction_map,
     const std::vector<util::Coordinate> &coordinates,
     const extractor::PackedOSMIDs &osm_node_ids,
     ProfileProperties profile_properties,
@@ -54,7 +53,7 @@ EdgeBasedGraphFactory::EdgeBasedGraphFactory(
     guidance::LaneDescriptionMap &lane_description_map)
     : m_max_edge_id(0), m_coordinates(coordinates), m_osm_node_ids(osm_node_ids),
       m_node_based_graph(std::move(node_based_graph)),
-      m_restriction_map(std::move(restriction_map)), m_barrier_nodes(barrier_nodes),
+      m_barrier_nodes(barrier_nodes),
       m_traffic_lights(traffic_lights), m_compressed_edge_container(compressed_edge_container),
       profile_properties(std::move(profile_properties)), name_table(name_table),
       lane_description_map(lane_description_map)
@@ -192,7 +191,8 @@ void EdgeBasedGraphFactory::Run(ScriptingEnvironment &scripting_environment,
                                 const std::string &turn_weight_penalties_filename,
                                 const std::string &turn_duration_penalties_filename,
                                 const std::string &turn_penalties_index_filename,
-                                const std::string &cnbg_ebg_mapping_path)
+                                const std::string &cnbg_ebg_mapping_path,
+                                const RestrictionMap &restriction_map)
 {
     TIMER_START(renumber);
     m_max_edge_id = RenumberEdges() - 1;
@@ -211,7 +211,8 @@ void EdgeBasedGraphFactory::Run(ScriptingEnvironment &scripting_environment,
                               turn_lane_data_filename,
                               turn_weight_penalties_filename,
                               turn_duration_penalties_filename,
-                              turn_penalties_index_filename);
+                              turn_penalties_index_filename,
+                              restriction_map);
 
     TIMER_STOP(generate_edges);
 
@@ -321,7 +322,8 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
     const std::string &turn_lane_data_filename,
     const std::string &turn_weight_penalties_filename,
     const std::string &turn_duration_penalties_filename,
-    const std::string &turn_penalties_index_filename)
+    const std::string &turn_penalties_index_filename,
+    const RestrictionMap &restriction_map)
 {
 
     util::Log() << "Generating edge-expanded edges ";
@@ -342,7 +344,7 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
     SuffixTable street_name_suffix_table(scripting_environment);
     guidance::TurnAnalysis turn_analysis(*m_node_based_graph,
                                          m_coordinates,
-                                         *m_restriction_map,
+                                         restriction_map,
                                          m_barrier_nodes,
                                          m_compressed_edge_container,
                                          name_table,
@@ -713,8 +715,7 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
     util::Log() << "Edge-expanded graph ...";
     util::Log() << "  contains " << m_edge_based_edge_list.size() << " edges";
     util::Log() << "  skips " << restricted_turns_counter << " turns, "
-                                                             "defined by "
-                << m_restriction_map->size() << " restrictions";
+                "defined by " << restriction_map.size() << " restrictions";
     util::Log() << "  skips " << skipped_uturns_counter << " U turns";
     util::Log() << "  skips " << skipped_barrier_turns_counter << " turns over barriers";
 }

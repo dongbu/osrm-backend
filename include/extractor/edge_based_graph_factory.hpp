@@ -78,7 +78,6 @@ class EdgeBasedGraphFactory
                                    CompressedEdgeContainer &compressed_edge_container,
                                    const std::unordered_set<NodeID> &barrier_nodes,
                                    const std::unordered_set<NodeID> &traffic_lights,
-                                   std::shared_ptr<const RestrictionMap> restriction_map,
                                    const std::vector<util::Coordinate> &coordinates,
                                    const extractor::PackedOSMIDs &osm_node_ids,
                                    ProfileProperties profile_properties,
@@ -91,7 +90,8 @@ class EdgeBasedGraphFactory
              const std::string &turn_weight_penalties_filename,
              const std::string &turn_duration_penalties_filename,
              const std::string &turn_penalties_index_filename,
-             const std::string &cnbg_ebg_mapping_path);
+             const std::string &cnbg_ebg_mapping_path,
+             const RestrictionMap & restriction_map);
 
     // The following get access functions destroy the content in the factory
     void GetEdgeBasedEdges(util::DeallocatingVector<EdgeBasedEdge> &edges);
@@ -139,7 +139,6 @@ class EdgeBasedGraphFactory
     const std::vector<util::Coordinate> &m_coordinates;
     const extractor::PackedOSMIDs &m_osm_node_ids;
     std::shared_ptr<util::NodeBasedDynamicGraph> m_node_based_graph;
-    std::shared_ptr<RestrictionMap const> m_restriction_map;
 
     const std::unordered_set<NodeID> &m_barrier_nodes;
     const std::unordered_set<NodeID> &m_traffic_lights;
@@ -159,7 +158,8 @@ class EdgeBasedGraphFactory
                                    const std::string &turn_lane_data_filename,
                                    const std::string &turn_weight_penalties_filename,
                                    const std::string &turn_duration_penalties_filename,
-                                   const std::string &turn_penalties_index_filename);
+                                   const std::string &turn_penalties_index_filename,
+                                   const RestrictionMap & restriction_map);
 
     NBGToEBG InsertEdgeBasedNode(const NodeID u, const NodeID v);
 
