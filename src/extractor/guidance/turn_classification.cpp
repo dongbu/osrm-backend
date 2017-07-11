@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <cstddef>
 #include <cstdint>
+#include <mutex>
 
 namespace osrm
 {
@@ -12,7 +13,7 @@ namespace guidance
 {
 
 std::pair<util::guidance::EntryClass, util::guidance::BearingClass>
-classifyIntersection(Intersection intersection)
+classifyIntersection(Intersection intersection, osrm::util::Coordinate loc)
 {
     if (intersection.empty())
         return {};
@@ -45,6 +46,8 @@ classifyIntersection(Intersection intersection)
 
     // finally transfer data to the entry/bearing classes
     std::size_t number = 0;
+    static std::mutex mutex;
+    static std::uint32_t m = 0;
     if (canBeDiscretized)
     {
         if (util::guidance::BearingClass::getDiscreteBearing(intersection.back().bearing) <
@@ -56,7 +59,15 @@ classifyIntersection(Intersection intersection)
         for (const auto &road : intersection)
         {
             if (road.entry_allowed)
+            {
+                std::lock_guard<std::mutex> lock(mutex);
+                if (number > m)
+                {
+                    std::cout << "activated entry_class A " << number << " at " << loc << "\n";
+                    m = number;
+                }
                 entry_class.activate(number);
+            }
             auto discrete_bearing_class =
                 util::guidance::BearingClass::getDiscreteBearing(std::round(road.bearing));
             bearing_class.add(std::round(discrete_bearing_class *
@@ -69,7 +80,15 @@ classifyIntersection(Intersection intersection)
         for (const auto &road : intersection)
         {
             if (road.entry_allowed)
+            {
+                std::lock_guard<std::mutex> lock(mutex);
+                if (number > m)
+                {
+                    std::cout << "activated entry_class B " << number << " at " << loc << "\n";
+                    m = number;
+                }
                 entry_class.activate(number);
+            }
             bearing_class.add(std::round(road.bearing));
             ++number;
         }
