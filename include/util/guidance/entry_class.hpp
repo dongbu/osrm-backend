@@ -36,7 +36,7 @@ namespace guidance
 
 class EntryClass
 {
-    using FlagBaseType = std::uint32_t;
+    using FlagBaseType = std::uint64_t;
 
   public:
     constexpr EntryClass() : enabled_entries_flags(0) {}
